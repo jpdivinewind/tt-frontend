@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Routes, Route} from 'react-router-dom';
 import CurrentRatesPage from './page/CurrentRatesPage';
 import RatesHistoryPage from './page/RatesHistoryPage';
@@ -11,12 +11,17 @@ const PageContainer = () => {
     const [rates, setRates] = useState<ICurrentRatesContext>({current: null});
 
     const socket = io(import.meta.env.VITE_API_URL);
-    socket.on(
-        'exchange-rates-updated',
-        (event: {exchangeRates: IExchangeRates}) => {
-            setRates({current: event.exchangeRates});
-        },
-    );
+    useEffect(() => {
+        socket.on(
+            'exchange-rates-updated',
+            (event: {exchangeRates: IExchangeRates}) => {
+                setRates({current: event.exchangeRates});
+            },
+        );
+        return () => {
+            socket.off('exchange-rates-updated');
+        };
+    });
 
     useAsyncEffect(async () => {
         if (rates.current === null) {
